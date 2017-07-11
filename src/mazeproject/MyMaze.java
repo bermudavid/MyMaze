@@ -1,16 +1,13 @@
 package mazeproject;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 /**
  * 
  * @author Andrew.E
@@ -40,7 +37,14 @@ public class MyMaze {
         }
       }
     
-    
+    //Finish maze
+    public boolean reachedEnd(int x, int y){
+        return map.get(y).get(x) == 'F';
+    }
+    // dead end - revisable
+    public boolean deadEnd(int x, int y){
+        return map.size() == y || map.get(y).size() == x ;
+    }
     public void printPreMaze(){
       for(LinkedList<Character> cols: map){
         for(Character sq : cols){
@@ -66,7 +70,7 @@ public class MyMaze {
           {'.','F','.'},
           {'.','.','.'}
         };
-        char[][] white = { 
+        char[][] open = { 
           {'.','.','.'},
           {'.','.','.'},
           {'.','.','.'}
@@ -78,18 +82,17 @@ public class MyMaze {
             
               switch(map.get(i).get(j)){
                 case '.':
-                  sb.append(white[k]);
+                  sb.append(open[k]);
                   break;
-                case 's':
+                case 'S':
                   sb.append(init[k]);
                   break;
-                case 'f':
+                case 'F':
                   sb.append(end[k]);
                   break;
                 case 'X':
                   sb.append(wall[k]);
                   break;
-                  
               }
             }
             sb.append("\n");
@@ -111,11 +114,11 @@ public class MyMaze {
      */
     public void startPos(int x,int y){
       map.get(y).remove(x);
-      map.get(y).add(x, 's');
+      map.get(y).add(x, 'S');
     }
     public void endPos(int x,int y){
       map.get(y).remove(x);
-      map.get(y).add(x, 'f');
+      map.get(y).add(x, 'F');
     }
     public void fillWallsByLine(String[] line){
       for(String pos: line){
