@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,8 +23,8 @@ public class MyMaze {
     // . for open space
   private static final String FILENAME = "input_file";
 
-  char [][] map; 
-  
+  //char [][] map; 
+  LinkedList<LinkedList<Character>> map = new LinkedList<>();
    java.awt.Point start = new java.awt.Point();
    
     public static void main(String[] args) {
@@ -31,21 +32,35 @@ public class MyMaze {
         
     }
     public void initMaze(int x,int y){
-      map = new char[y][x];
-      for (int i = 0; i < map.length; i++) {
+      //map = new char[y][x];
+      /*for (int i = 0; i < map.length; i++) {
         for (int j = 0; j < map[0].length; j++) {
           map[i][j] = '.';
+        }*/
+        for(int i = 0; i < y; i ++){
+          LinkedList<Character> tmp = new LinkedList<Character>();
+          for (int j = 0; j < x; j++) {
+            tmp.add('.');
+          }
+          map.add(tmp);
         }
       }
-    }
+    
     
     public void printPreMaze(){
-      for(char[] col: map){
+      /*for(char[] col: map){
         for(char sq : col){
           System.out.print(sq);
         }
         System.out.println("");
+      }*/
+      for(LinkedList<Character> cols: map){
+        for(Character sq : cols){
+          System.out.print(sq);
+        }
+        System.out.println("");
       }
+
       try {
         PrintWriter fileOutput = new PrintWriter("output_file.txt", "UTF-8");
         char[][] wall = { 
@@ -69,11 +84,11 @@ public class MyMaze {
           {'.','.','.'}
         };
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < map.length; i++) {
+        for (int i = 0; i < map.size(); i++) {
           for (int k = 0; k < 3; k++) {
-            for (int j = 0; j < map[i].length; j++) {
+            for (int j = 0; j < map.getFirst().size(); j++) {
             
-              switch(map[i][j]){
+              switch(map.get(i).get(j)){
                 case '.':
                   sb.append(white[k]);
                   break;
@@ -109,10 +124,14 @@ public class MyMaze {
      * @param y 
      */
     public void startPos(int x,int y){
-      map[y][x] = 's';
+      //map[y][x] = 's';
+      map.get(y).remove(x);
+      map.get(y).add(x, 's');
     }
     public void endPos(int x,int y){
-      map[y][x] = 'f';
+      //map[y][x] = 'f';
+      map.get(y).remove(x);
+      map.get(y).add(x, 'f');
     }
     public void fillWallsByLine(String[] line){
       for(String pos: line){
@@ -121,7 +140,9 @@ public class MyMaze {
           pos = pos.replace(")", "");
           int x = Integer.parseInt(pos.split(",")[0].trim());
           int y = Integer.parseInt(pos.split(",")[1].trim());
-          map[y][x] = 'X';  
+          //map[y][x] = 'X';
+          map.get(y).remove(x);
+          map.get(y).add(x, 'X');
         } 
       }
     }
