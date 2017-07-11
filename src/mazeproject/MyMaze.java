@@ -13,23 +13,24 @@ import java.util.logging.Logger;
  * @author Andrew.E
  */
 public class MyMaze {
-
+  
     // S for starting postion
     // F for finish
     // X for wall
     // . for open space
+  
   private static final String FILENAME = "input_file";
-
+  //map 
   LinkedList<LinkedList<Character>> map = new LinkedList<>();
    java.awt.Point start = new java.awt.Point();
    
     public static void main(String[] args) {
-        new MyMaze();
-        
+      new MyMaze();
     }
+    
     public void initMaze(int x,int y){
         for(int i = 0; i < y; i ++){
-          LinkedList<Character> tmp = new LinkedList<Character>();
+          LinkedList<Character> tmp = new LinkedList<>();
           for (int j = 0; j < x; j++) {
             tmp.add('.');
           }
@@ -37,14 +38,102 @@ public class MyMaze {
         }
       }
     
-    //Finish maze
-    public boolean reachedEnd(int x, int y){
-        return map.get(y).get(x) == 'F';
+    /**
+     * Clone linked list of characters
+     * @param n - linke list to clone
+     * @return a clone of the linked list passed by params 
+     */
+    public  LinkedList<LinkedList<Character>> clone(LinkedList<LinkedList<Character>> n){
+      LinkedList<LinkedList<Character>> copy = new LinkedList<>();
+      int y = n.get(0).size();
+      int x = n.size();
+      for (int i = 0; i < x; i++) {
+        LinkedList<Character> tmp = new LinkedList<>();
+        for (int j = 0; j < y; j++) {
+          tmp.add(n.get(i).get(j));
+        }
+        copy.add(tmp);
+      }
+      return copy;
     }
-    // dead end - revisable
-    public boolean deadEnd(int x, int y){
-        return map.size() == y || map.get(y).size() == x ;
+    //test
+    int counter = 0;
+    public boolean step(int x, int y){
+      counter ++;
+      // dead end
+      if(x < 0 || y < 0 || x >= map.size() || y >= map.get(0).size()){
+        printMaze(map);
+        return false;
+      }
+      //if are ok, finish
+      if(map.get(x).get(y) == 'F'){
+        map.get(x).remove(y);
+        map.get(x).add(y,'f'); // to see 
+        return true;
+      }
+      //if is a wall or are visited square
+      if (map.get(x).get(y) == 'X' || map.get(x).get(y) == 'V') {
+			return false;
+		}
+      // maze step
+      map.get(x).set(y,'V');
+      boolean result = false;
+      //east
+      result = step(x,y+1);
+      if(result){return true;}
+      //north
+      result = step(x+1,y);
+      if(result){return true;}
+      //west 
+      result = step(x,y-1);
+      if(result){return true;}
+      //south
+      result = step(x-1,y);
+      if(result){return true;}
+      //dead end
+      map.get(x).remove(y);
+      map.get(x).add(y,'.');
+      //go back
+      return false;
     }
+    
+    
+    /**
+     * solve the maze
+     * @param x - init.
+     * @param y - end.
+     */
+    public void solveMaze(int x, int y) {
+      if(step(x,y)){
+        map.get(y).remove(x);
+        map.get(y).add(x,'S');
+        printMaze(map);
+      }
+    }
+    public int[] findInit(){
+      int[] res = {0,0};
+      for (int i = 0; i < map.size(); i++) {
+        for (int j = 0; j < map.get(i).size(); j++) {
+          if(map.get(i).get(j) == 'S'){
+            res[0] = i;
+            res[1] = j;
+          }
+        }
+      }
+      return res;
+    }
+    
+    public void printMaze(LinkedList<LinkedList<Character>> map){
+      System.out.println("");
+      for(LinkedList<Character> cols: map){
+        for(Character sq : cols){
+          System.out.print(sq);
+        }
+        System.out.println("");
+      }
+    }
+    
+    
     public void printPreMaze(){
       for(LinkedList<Character> cols: map){
         for(Character sq : cols){
@@ -75,6 +164,11 @@ public class MyMaze {
           {'.','.','.'},
           {'.','.','.'}
         };
+        char[][] visited = { 
+          {'.','.','.'},
+          {'.','V','.'},
+          {'.','.','.'}
+        };
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < map.size(); i++) {
           for (int k = 0; k < 3; k++) {
@@ -93,6 +187,9 @@ public class MyMaze {
                 case 'X':
                   sb.append(wall[k]);
                   break;
+                case 'V':
+                  sb.append(visited[k]);
+                  break;
               }
             }
             sb.append("\n");
@@ -101,9 +198,9 @@ public class MyMaze {
         fileOutput.write(sb.toString());
         fileOutput.close();
       } catch (FileNotFoundException ex) {
-        Logger.getLogger(MyMaze.class.getName()).log(Level.SEVERE, null, ex);
+          System.out.println("File Not Found: "+ex);
       } catch (UnsupportedEncodingException ex) {
-        Logger.getLogger(MyMaze.class.getName()).log(Level.SEVERE, null, ex);
+          System.out.println("Unsupported Encoding: "+ex);
       }
 
     }
@@ -141,8 +238,6 @@ public class MyMaze {
       // to take the 3 first lines
       int lineCounter = 1;
       while ((line = br.readLine())!=null) {
-        String[] a = {""};
-      
         line = line.replace(".","");
         if(lineCounter == 1){
           String[] init = line.split(",");
@@ -180,6 +275,12 @@ public class MyMaze {
       } catch (IOException ex) {
         Logger.getLogger(MyMaze.class.getName()).log(Level.SEVERE, null, ex);
       }
+      // path finding
+      int[] init = findInit();
+      int x = init[0];
+      int y = init[1];
+      solveMaze(0,0);
+      printPreMaze();
       
     }
 
