@@ -23,7 +23,6 @@ public class MyMaze {
     // . for open space
   private static final String FILENAME = "input_file";
 
-  //char [][] map; 
   LinkedList<LinkedList<Character>> map = new LinkedList<>();
    java.awt.Point start = new java.awt.Point();
    
@@ -32,11 +31,6 @@ public class MyMaze {
         
     }
     public void initMaze(int x,int y){
-      //map = new char[y][x];
-      /*for (int i = 0; i < map.length; i++) {
-        for (int j = 0; j < map[0].length; j++) {
-          map[i][j] = '.';
-        }*/
         for(int i = 0; i < y; i ++){
           LinkedList<Character> tmp = new LinkedList<Character>();
           for (int j = 0; j < x; j++) {
@@ -48,12 +42,6 @@ public class MyMaze {
     
     
     public void printPreMaze(){
-      /*for(char[] col: map){
-        for(char sq : col){
-          System.out.print(sq);
-        }
-        System.out.println("");
-      }*/
       for(LinkedList<Character> cols: map){
         for(Character sq : cols){
           System.out.print(sq);
@@ -106,8 +94,6 @@ public class MyMaze {
             }
             sb.append("\n");
           }
-          
-         // fileOutput.println();
         }
         fileOutput.write(sb.toString());
         fileOutput.close();
@@ -124,12 +110,10 @@ public class MyMaze {
      * @param y 
      */
     public void startPos(int x,int y){
-      //map[y][x] = 's';
       map.get(y).remove(x);
       map.get(y).add(x, 's');
     }
     public void endPos(int x,int y){
-      //map[y][x] = 'f';
       map.get(y).remove(x);
       map.get(y).add(x, 'f');
     }
@@ -140,7 +124,6 @@ public class MyMaze {
           pos = pos.replace(")", "");
           int x = Integer.parseInt(pos.split(",")[0].trim());
           int y = Integer.parseInt(pos.split(",")[1].trim());
-          //map[y][x] = 'X';
           map.get(y).remove(x);
           map.get(y).add(x, 'X');
         } 
