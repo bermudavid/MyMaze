@@ -22,7 +22,7 @@ public class MyMaze {
   private static final String FILENAME = "input_file";
   //map 
   LinkedList<LinkedList<Character>> map = new LinkedList<>();
-   java.awt.Point start = new java.awt.Point();
+    java.awt.Point start = new java.awt.Point();
    
     public static void main(String[] args) {
       new MyMaze();
@@ -96,6 +96,219 @@ public class MyMaze {
       //go back
       return false;
     }
+    /**
+     * mark with character
+     * @param x  
+     * @param y  
+     * @return 
+     */
+    void mark(int x, int y, Character v){
+      map.get(x).remove(y);
+      map.get(x).add(y,v);
+      printMaze(map);
+    }
+    void mark(int x, int y, Character v, LinkedList<LinkedList<Character>> map){
+      map.get(x).remove(y);
+      map.get(x).add(y,v);
+      printMaze(map);
+    }
+    boolean canMove(int x, int y){
+        if(x >= 0 && x < map.size() && y >= 0 && y < map.get(0).size()){
+          if(map.get(x).get(y) == '.'){
+            return true;
+          }
+        }
+      return false;
+    }
+    class Node {
+      private Character square;
+      private int x,y;
+      
+      Node (int x, int y, Character square){
+        this.x = x;
+        this.y = y;
+        this.square = square;
+      }
+      
+      public void setSquare(Character square){
+        this.square = square;
+      }
+      Character getSq(){
+        return this.square;
+      }
+
+      public int getX() {
+        return x;
+      }
+
+      public void setX(int x) {
+        this.x = x;
+      }
+
+      public int getY() {
+        return y;
+      }
+
+      public void setY(int y) {
+        this.y = y;
+      }
+      public Node north(){
+        if(isInMaze(x,y-1)){
+          return new Node(x,y-1,map.get(x).get(y-1));
+        } else {
+          return null;
+        }
+      }
+      public Node east(){
+        if(isInMaze(x+1,y)){
+          return new Node(x+1,y,map.get(x+1).get(y));
+        } else {
+          return null;
+        }
+      }
+      public Node south(){
+        if(isInMaze(x,y+1)){
+          return new Node(x,y+1,map.get(x).get(y+1));
+        } else {
+          return null;
+        }
+      }
+      public Node west(){
+        if(isInMaze(x-1,y)){
+          return new Node(x-1,y,map.get(x-1).get(y));
+        } else {
+          return null;
+        }
+      }
+    }
+    /**
+     * check if the square is reachable
+     * @param squ char to probe
+     * @return true if is reachable false is not
+     */
+    boolean charValid(Character squ){
+      if( squ == '.' || squ == 'F' ){
+        return true;
+      } else {
+        return false;
+      }
+    }
+    boolean haveNeigs(Node n){
+      Character tmp;
+      if(n.getX()-1 >= 0){
+        tmp = map.get(n.getX()-1).get(n.getY());
+        if(charValid(tmp)){
+          return true;
+        }
+      } 
+      if(n.getX()+1 < map.size()){
+        tmp = map.get(n.getX()+1).get(n.getY());
+        //if is valid return false
+        if(charValid(tmp)){
+          return true;
+        }
+      }
+      if(n.getY()-1 >= 0){
+        tmp = map.get(n.getX()).get(n.getY()-1);
+        //if is valid return false
+        if(charValid(tmp)){
+          return true;
+        }
+      }
+      if(n.getY()+1 < map.get(0).size()){
+        tmp = map.get(n.getX()).get(n.getY()+1);
+        //if is valid return false
+        if(charValid(tmp)){
+          return true;
+        }
+      } 
+      return false;
+    }
+    
+    public boolean isClear(int i, int j) {
+      assert(isInMaze(i,j)); 
+      return (map.get(i).get(j) != 'X' && map.get(i).get(j) != 'V');
+    }
+    public boolean isClear(Node pos) {
+      return isClear(pos.getX(), pos.getY());
+    }
+
+    //true if cell is within maze 
+    public boolean isInMaze(int i, int j) {
+      if (i >= 0 && i<map.size() && j>= 0 && j<map.get(0).size()) return true; 
+      else return false;
+    }
+      //true if cell is within maze 
+      public boolean isInMaze(Node pos) {
+      if(pos == null){
+        return false;
+      }
+      return isInMaze(pos.getX(), pos.getY());
+    }
+    
+    
+    public boolean stepStack(int x, int y){
+      LinkedList<LinkedList<Character>> clone = clone(map);
+      LinkedList<Node> S = new LinkedList<>();
+      Node v = new Node(x,y,map.get(x).get(y));
+      Node next;
+      S.push(v);
+      //Character direction = 'U';
+      
+      while(!S.isEmpty()){
+        v = S.peek();  
+        if(v.getSq() == 'F') {
+          mark(v.getX(),v.getY(),'Ñ',clone);
+          v.setSquare('Ñ');
+          break;
+        }
+        
+        if(isClear(v)){
+          mark(v.getX(),v.getY(),'V');  
+          v.setSquare('V');
+          
+          next  = v.south();
+          if(isInMaze(next) && isClear(next)){
+            S.add(next);
+          }
+          next  = v.east();
+          if(isInMaze(next) && isClear(next)){
+            S.add(next);
+          }
+          next  = v.north();
+          if(isInMaze(next) && isClear(next)){
+            S.add(next);
+          }
+          next  = v.west();
+          if(isInMaze(next) && isClear(next)){
+            S.add(next);
+          }   
+        } else {
+          
+          S.pop();
+          
+          if(v.getSq() == 'V'){
+            mark(v.getX(),v.getY(),'X',clone);  
+            v.setSquare('X');
+          }
+        }
+      }
+      //restore maz & show path
+      
+      if(!S.isEmpty()){
+        System.out.println("done");
+        return false;
+      }
+      
+      while(!S.isEmpty()){
+      Node tmp = S.pop();
+      if(tmp.getSq() =='X')
+        mark(tmp.getX(),tmp.getY(),'V',clone);
+      }
+      map = clone;
+      printMaze(map);
+      return true;
+    }
     
     
     /**
@@ -104,11 +317,12 @@ public class MyMaze {
      * @param y - end.
      */
     public void solveMaze(int x, int y) {
-      if(step(x,y)){
+      /*if(step(x,y)){
         map.get(y).remove(x);
         map.get(y).add(x,'S');
         printMaze(map);
-      }
+      }*/
+      stepStack(x,y);
     }
     public int[] findInit(){
       int[] res = {0,0};
@@ -279,9 +493,8 @@ public class MyMaze {
       int[] init = findInit();
       int x = init[0];
       int y = init[1];
-      solveMaze(0,0);
+      solveMaze(x,y);
       printPreMaze();
-      
     }
 
 }
