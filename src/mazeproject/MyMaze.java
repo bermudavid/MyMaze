@@ -5,10 +5,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import static java.lang.Thread.sleep;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 /**
@@ -298,9 +296,6 @@ public class MyMaze {
         mark(v.getX(),v.getY(),'V');
         v.setSquare('V');
         if(haveNeigs(v)){ // have neighborgs
-          //mar as visited
-          
-          // use break to take only one
           next  = v.south();
           if(isInMaze(next) && isClear(next)){
             S.add(next);
@@ -319,7 +314,6 @@ public class MyMaze {
           }   
         } 
       }
-      //restore maz & show path
       printMaze(map);
       return true;
     }
