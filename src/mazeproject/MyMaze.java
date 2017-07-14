@@ -7,6 +7,8 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import static java.lang.Thread.sleep;
 import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 /**
@@ -64,16 +66,19 @@ public class MyMaze {
      * @param y  
      * @return 
      */
+
     void mark(int x, int y, Character v){
       map.get(x).remove(y);
       map.get(x).add(y,v);
       printMaze(map);
-    try {
-      sleep(150);
-    } catch (InterruptedException ex) {
-      Logger.getLogger(MyMaze.class.getName()).log(Level.SEVERE, null, ex);
+      try {
+
+       Thread.sleep(150);
+      } catch (InterruptedException ex) {
+        Logger.getLogger(MyMaze.class.getName()).log(Level.SEVERE, null, ex);
+      }
     }
-    }
+    
     void mark(int x, int y, Character v, LinkedList<LinkedList<Character>> maze){
       maze.get(x).remove(y);
       maze.get(x).add(y,v);
@@ -278,6 +283,46 @@ public class MyMaze {
       printMaze(map);
       return true;
     }
+    public boolean solveQueue(int x, int y){
+      Queue<Node> S = new LinkedList<>(); // queue
+      Node v = new Node(x,y,map.get(x).get(y)); // add initial pos
+      Node next;
+      S.add(v); //start node
+      
+      while(!S.isEmpty()){
+        v = S.remove();  
+        if(v.getSq() == 'F') {
+          break;
+        }
+        //mark as visited
+        mark(v.getX(),v.getY(),'V');
+        v.setSquare('V');
+        if(haveNeigs(v)){ // have neighborgs
+          //mar as visited
+          
+          // use break to take only one
+          next  = v.south();
+          if(isInMaze(next) && isClear(next)){
+            S.add(next);
+          }
+          next  = v.east();
+          if(isInMaze(next) && isClear(next)){
+            S.add(next);
+          }
+          next  = v.north();
+          if(isInMaze(next) && isClear(next)){
+            S.add(next);
+          }
+          next  = v.west();
+          if(isInMaze(next) && isClear(next)){
+            S.add(next);
+          }   
+        } 
+      }
+      //restore maz & show path
+      printMaze(map);
+      return true;
+    }
     
     void removeMazeBacktracing(LinkedList<LinkedList<Character>>map){
       for (int i = 0; i < map.size(); i++) {
@@ -295,12 +340,8 @@ public class MyMaze {
      * @param y - end.
      */
     public void solveMaze(int x, int y) {
-      /*if(step(x,y)){
-        map.get(y).remove(x);
-        map.get(y).add(x,'S');
-        printMaze(map);
-      }*/
-      solveStack(x,y);
+      //solveStack(x,y);
+      solveQueue(x,y);
     }
     public int[] findInit(){
       int[] res = {0,0};
@@ -324,8 +365,6 @@ public class MyMaze {
         System.out.println("");
       }
     }
-    
-    
     public void printPreMaze(){
       for(LinkedList<Character> cols: map){
         for(Character sq : cols){
@@ -333,7 +372,6 @@ public class MyMaze {
         }
         System.out.println("");
       }
-
       try {
         PrintWriter fileOutput = new PrintWriter("output_file.txt", "UTF-8");
         char[][] wall = { 
