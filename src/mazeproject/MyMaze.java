@@ -5,7 +5,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,6 +26,10 @@ public class MyMaze {
   private static final String FILENAME = "input_file";
   //map 
   LinkedList<LinkedList<Character>> map = new LinkedList<>();
+  Node ini;
+  Node end;
+  
+  
     java.awt.Point start = new java.awt.Point();
     
     public static void main(String[] args) {
@@ -93,7 +99,7 @@ public class MyMaze {
     /**
      * this represent a square
      */
-    class Node {
+    class Node{
       private Character square;
       private int x,y;
       
@@ -109,19 +115,15 @@ public class MyMaze {
       Character getSq(){
         return this.square;
       }
-
       public int getX() {
         return x;
       }
-
       public void setX(int x) {
         this.x = x;
       }
-
       public int getY() {
         return y;
       }
-
       public void setY(int y) {
         this.y = y;
       }
@@ -153,6 +155,14 @@ public class MyMaze {
           return this;
         }
       }
+    }
+    /**
+     * return the distance to the end node
+     * @param n node to compare
+     * @return distance to end
+     */
+    int distanceToEnd(Node n){
+      return Math.abs(n.getX() -end.getX()) + Math.abs(n.getY()-end.getY());
     }
     /**
      * check if the square is reachable
@@ -317,6 +327,60 @@ public class MyMaze {
       printMaze(map);
       return true;
     }
+    public boolean solveHeap(int x, int y){
+      //LinkedList<Node> S = new LinkedList<>(); // stack
+      Node v = new Node(x,y,map.get(x).get(y)); // add initial pos
+      Node next;
+ 
+      PriorityQueue<Node> S = new PriorityQueue<>(10, new Comparator<Node>() {
+        @Override
+        public int compare(Node n1, Node n2) {
+          Integer d1 = distanceToEnd(n1);
+          Integer d2 = distanceToEnd(n2); 
+          return Integer.compare(d1, d2);        }
+      });
+      S.add(v);
+      while(!S.isEmpty()){
+        
+        v = S.poll();  
+        if(v.getSq() == 'F') {
+          mark(v.getX(),v.getY(),'V');
+          v.setSquare('V');
+          break;
+        }
+        //mark as visited
+        mark(v.getX(),v.getY(),'V');
+        v.setSquare('V');
+        if(haveNeigs(v)){ // have neighborgs
+          //mar as visited
+          
+          // use break to take only one
+          
+          next  = v.east();
+          if(isInMaze(next) && isClear(next)){
+            S.add(next);
+
+          }
+          
+          next  = v.south();
+          if(isInMaze(next) && isClear(next)){
+            S.add(next);
+            
+          }
+          next  = v.north();
+          if(isInMaze(next) && isClear(next)){
+            S.add(next);
+            
+          }
+          next  = v.west();
+          if(isInMaze(next) && isClear(next)){
+            S.add(next);
+          
+          }   
+        } 
+      }
+      return true;
+    }
     
     void removeMazeBacktracing(LinkedList<LinkedList<Character>>map){
       for (int i = 0; i < map.size(); i++) {
@@ -335,7 +399,8 @@ public class MyMaze {
      */
     public void solveMaze(int x, int y) {
       //solveStack(x,y);
-      solveQueue(x,y);
+      //solveQueue(x,y);
+      solveHeap(x,y);
     }
     public int[] findInit(){
       int[] res = {0,0};
@@ -436,10 +501,12 @@ public class MyMaze {
     public void startPos(int x,int y){
       map.get(y).remove(x);
       map.get(y).add(x, 'S');
+      this.ini = new Node(y,x,'S'); 
     }
     public void endPos(int x,int y){
       map.get(y).remove(x);
       map.get(y).add(x, 'F');
+      this.end = new Node(y,x,'S'); 
     }
     public void fillWallsByLine(String[] line){
       for(String pos: line){
@@ -474,7 +541,7 @@ public class MyMaze {
           line = line.replace(")","");
           String[] init = line.split(",");
           int x = Integer.parseInt(init[0].trim());
-          int y = Integer.parseInt(init[1].trim());
+          int y = Integer.parseInt(init[1].trim()); 
           startPos(x,y);
         }
         if(lineCounter == 3){
