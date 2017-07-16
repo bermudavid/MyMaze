@@ -155,6 +155,11 @@ public class MyMaze {
           return this;
         }
       }
+      @Override
+      public String toString(){
+        
+        return "("+x+","+y+","+square+")";
+      }
     }
     /**
      * return the distance to the end node
@@ -376,7 +381,9 @@ public class MyMaze {
           if(isInMaze(next) && isClear(next)){
             S.add(next);
           
-          }   
+          }  
+          
+          System.out.println(S.toString());
         } 
       }
       return true;
