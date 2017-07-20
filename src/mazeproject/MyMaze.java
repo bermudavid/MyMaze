@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.logging.Level;
@@ -96,19 +98,185 @@ public class MyMaze {
         }
       return false;
     }
+    interface Position<E> {
+    /**
+     * returns the stament in position
+     * @throws IllegalStateException 
+     */
+      E getElement() throws IllegalStateException;
+    }
+    
+    class Graph<V,E> {
+      //Nested classes
+      private class Edge<E>{
+        private E element;
+        private Position<Edge<E>> pos;
+        private Vertex<V>[ ] endpoints;
+        /** 
+         * Constructs Edge instance from u to v, storing the given element.
+         */
+        public Edge(Vertex<V> u, Vertex<V> v, E elem) {
+          element = elem;
+          endpoints = (Vertex<V>[ ]) new Vertex[ ]{u,v}; // array of length 2
+        }
+        /** Returns the element associated with the edge. */
+        public E getElement() { return element; }
+        /** Returns reference to the endpoint array. */
+        public Vertex<V>[ ] getEndpoints() { return endpoints; }
+        /** Stores the position of this edge within the graph's vertex list. */
+        public void setPosition(Position<Edge<E>> p) { pos = p; }
+        /** Returns the position of this edge within the graph's vertex list. */
+        public Position<Edge<E>> getPosition() { return pos; }
+      }
+      private class Vertex<V>{
+        private V element;
+        private Position<Vertex<V>> pos;
+        private Map<Vertex<V>, Edge<E>> outgoing, incoming;
+
+        public Vertex(V elem, boolean graphIsDirected) {
+          element = elem;
+          outgoing = new HashMap<>();
+          if (graphIsDirected)
+            incoming = new HashMap<>();
+          else
+            incoming = outgoing; // if undirected, alias outgoing map
+          }
+          /** Returns the element associated with the vertex. */
+          public V getElement() { return element; }
+          /** Stores the position of this vertex within the graph's vertex list. */
+          public void setPosition(Position<Vertex<V>> p) { pos = p; }
+          /** Returns the position of this vertex within the graph's vertex list. */
+          public Position<Vertex<V>> getPosition() { return pos; }
+          /** Returns reference to the underlying map of outgoing edges. */
+          public Map<Vertex<V>, Edge<E>> getOutgoing() { return outgoing; }
+          /** Returns reference to the underlying map of incoming edges. */
+          public Map<Vertex<V>, Edge<E>> getIncoming() { return incoming; }
+      }
+      
+      
+      //instance variables
+      private boolean isDirected;
+      private LinkedList<Vertex<V>> vertices = new LinkedList<>();
+      private LinkedList<Edge<E>> edges = new LinkedList<>();
+      //methods
+      
+      
+      public Graph(boolean directed) { isDirected = directed; }
+      /** Returns the number of vertices of the graph */
+      public int numVertices() { return vertices.size(); }
+      /**Returns the vertices of the graph as an iterable collection */
+      public Iterable<Vertex<V>> vertices() { return vertices; }
+      /**Returns the number of edges of the graph */
+      public int numEdges() { return edges.size(); }
+      /**Returns the edges of the graph as an iterable collection */
+      public Iterable<Edge<E>> edges() { return edges; }
+      /**Returns the number of edges for which vertex v is the origin. */
+      public int outDegree(Vertex<V> v) {
+        Vertex<V> vert = validate(v);
+        return vert.getOutgoing().size();
+      }
+      /**Returns an iterable collection of edges for which vertex v is the origin. */
+      public Iterable<Edge<E>> outgoingEdges(Vertex<V> v) {
+        Vertex<V> vert = validate(v);
+        return vert.getOutgoing().values(); // edges are the values in the adjacency map
+      }
+      /**Returns the number of edges for which vertex v is the destination. */
+      public int inDegree(Vertex<V> v) {
+        Vertex<V> vert = validate(v);
+        return vert.getIncoming().size();
+      }
+      /** Returns an iterable collection of edges for which vertex v is the destination. */
+      public Iterable<Edge<E>> incomingEdges(Vertex<V> v) {
+        Vertex<V> vert = validate(v);
+        return vert.getIncoming().values(); // edges are the values in the adjacency map
+      }
+      public Edge<E> getEdge(Vertex<V> u, Vertex<V> v) {
+      /** Returns the edge from u to v, or null if they are not adjacent. */
+        Vertex<V> origin = validate(u);
+        return origin.getOutgoing().get(v); // will be null if no edge from u to v
+      }
+      /** Returns the vertices of edge e as an array of length two. */
+      public Vertex<V>[ ] endVertices(Edge<E> e) {
+        Edge<E> edge = validate(e);
+        return edge.getEndpoints();
+      }
+      /* Returns the vertex that is opposite vertex v on edge e. */
+      public Vertex<V> opposite(Vertex<V> v, Edge<E> e) throws IllegalArgumentException {
+        Edge<E> edge = validate(e);
+        Vertex<V>[ ] endpoints = edge.getEndpoints();
+        
+		if (endpoints[0] == v)
+          return endpoints[1];
+        else if (endpoints[1] == v)
+          return endpoints[0];
+        else
+          throw new IllegalArgumentException("v is not incident to this edge");
+      }
+      /** Inserts and returns a new vertex with the given element. */
+      public Vertex<V> insertVertex(V element) {
+        Vertex<V> v = new Vertex<>(element, isDirected);
+        vertices.addLast(v);
+        v.setPosition(vertices.getLast().pos);
+        return v;
+      }
+      /** Inserts and returns a new edge between u and v, storing given element. */
+      public Edge<E> insertEdge(Vertex<V> u, Vertex<V> v, E element) throws IllegalArgumentException {
+        if (getEdge(u,v) == null) {
+          Edge<E> e = new Edge<>(u, v, element);
+          edges.addLast(e);
+          e.setPosition(edges.getLast().pos);
+          Vertex<V> origin = validate(u);
+          Vertex<V> dest = validate(v);
+          origin.getOutgoing().put(v, e);
+          dest.getIncoming().put(u, e);
+          return e;
+        } else {
+		    throw new IllegalArgumentException("Edge from u to v exists");
+		}
+      }
+      /**Removes a vertex and all its incident edges from the graph. */
+      public void removeVertex(Vertex<V> v) {
+        Vertex<V> vert = validate(v);
+        // remove all incident edges from the graph
+        for (Edge<E> e : vert.getOutgoing().values())
+          removeEdge(e);
+        for (Edge<E> e : vert.getIncoming().values())
+          removeEdge(e);
+          // remove this vertex from the list of vertices
+          vertices.remove(vert.getPosition());
+        
+      }
+      /** Not implemented yet */
+      public Vertex<V> validate(Vertex<V> v){
+        return v;
+      }
+      /** Not implemented yet */
+      public Edge<E> validate(Edge<E> e){
+        return e;
+      }
+      public void removeEdge(Edge<E> e){
+        
+      }
+      
+    }
+
+    
+    boolean graphSolveDFS(){
+      return true;
+    }
+    
     /**
      * this represent a square
      */
     class Node{
       private Character square;
       private int x,y;
-      
+
       Node (int x, int y, Character square){
         this.x = x;
         this.y = y;
         this.square = square;
       }
-      
       public void setSquare(Character square){
         this.square = square;
       }
@@ -159,6 +327,9 @@ public class MyMaze {
       public String toString(){
         
         return "("+x+","+y+","+square+")";
+      }
+      public Node getElement() throws IllegalStateException {
+        return this; 
       }
     }
     /**
@@ -329,7 +500,7 @@ public class MyMaze {
           }   
         } 
       }
-      printMaze(map);
+      //printMaze(map);
       return true;
     }
     public boolean solveHeap(int x, int y){
@@ -407,7 +578,8 @@ public class MyMaze {
     public void solveMaze(int x, int y) {
       //solveStack(x,y);
       //solveQueue(x,y);
-      solveHeap(x,y);
+      //solveHeap(x,y);
+      graphSolveDFS();
     }
     public int[] findInit(){
       int[] res = {0,0};
@@ -566,7 +738,7 @@ public class MyMaze {
         lineCounter++;
       }
       input.close();
-      printPreMaze();
+      //printPreMaze();
       }
       catch (FileNotFoundException e) {
           e.printStackTrace();
@@ -578,7 +750,7 @@ public class MyMaze {
       int x = init[0];
       int y = init[1];
       solveMaze(x,y);
-      printPreMaze();
+      //printPreMaze();
     }
 
 }
