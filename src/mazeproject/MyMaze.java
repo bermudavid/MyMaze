@@ -243,25 +243,59 @@ public class MyMaze {
         for (Edge<E> e : vert.getIncoming().values())
           removeEdge(e);
           // remove this vertex from the list of vertices
-          vertices.remove(vert.getPosition());
+        vertices.remove(vert.getPosition());
         
       }
       /** Not implemented yet */
       public Vertex<V> validate(Vertex<V> v){
-        return v;
+        if(v != null)
+          return v;
+        else
+          throw new IllegalArgumentException("Is invalid");
       }
       /** Not implemented yet */
       public Edge<E> validate(Edge<E> e){
+        
         return e;
       }
       public void removeEdge(Edge<E> e){
-        
+        edges.remove(e);
       }
       
     }
 
     
     boolean graphSolveDFS(){
+      Graph<Node,Integer> G = new Graph<>(false);
+      G.insertVertex(ini);
+      Node n = ini,s = ini ,e = ini ,w = ini;
+
+      for(int i = 0; i < map.size();i++){
+		for(int j = 0; j < map.get(0).size();j++){
+          n = n.north();
+          if(n != null && n.square != 'X'){
+            G.insertVertex(n);
+          }
+          s = s.south();
+          if(s != null && s.square != 'X'){
+            G.insertVertex(s);
+          }
+          e = e.east();
+          if(e != null && e.square != 'X'){
+            G.insertVertex(e);
+          }
+          w = w.west();
+          if(w != null && w.square != 'X'){
+            G.insertVertex(w);
+          }
+        }
+      }
+      
+      
+      System.out.println("Vertex: "+G.numVertices() + " Edges: "+ G.numEdges());
+      
+      
+      
       return true;
     }
     
