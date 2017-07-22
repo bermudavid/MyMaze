@@ -667,12 +667,29 @@ public class MyMaze {
      * @return 
      */
     boolean graphSolveDFS(Graph<Node,String> G, Vertex<Node> v){
-      LinkedList<Vertex<Node>> S = new LinkedList<>();
-      
+      LinkedList<Vertex<Node>> S = new LinkedList<>();    
       S.add(v);
-         
-      Vertex<Node> next;
-      
+      while(!S.isEmpty()){
+        v = S.pop();
+        if(v.getElement().getSq() == 'F'){          
+          return true;
+        }
+        if(v.getElement().getSq() != 'V'){
+          mark(v.getElement().getX(),v.getElement().getY(),'V');
+          v.getElement().setSquare('V');
+          for(Edge<String> w : G.outgoingEdges(v)){
+            S.push(G.opposite(v,w));
+            System.out.println(v.getElement()+ "->"+w.getElement() + "->" + G.opposite(v,w).getElement());
+          }
+        }
+      }
+      return true;
+    }
+    /*
+    boolean graphSolveBFS(Graph<Node,String> G, Vertex<Node> v){
+      //LinkedList<Vertex<Node>> S = new LinkedList<>();
+      Queue<Vertex<Node>> S = new LinkedList<>();
+      S.add(v);   
       while(!S.isEmpty()){
         v = S.pop();
         if(v.getElement().getSq() == 'F'){          
@@ -690,26 +707,7 @@ public class MyMaze {
       
       return true;
     }
-    
-    public boolean DFS(Graph<Node,Integer> g, Vertex<Node> u, List<Vertex<Node>> known, Map<Vertex<Node>, Edge<Integer>> forest) {
-      if(u.getElement().getSq() == 'F'){
-        mark(u.getElement().getX(), u.getElement().getY(),'V');
-        known.add(u); 
-        return true;
-      } 
-      mark(u.getElement().getX(), u.getElement().getY(),'V');
-      known.add(u);
-      for (Edge<Integer> e : g.outgoingEdges(u)) {     // for every outgoing edge from u
-        Vertex<Node> v = g.opposite(u, e);
-        if (!known.contains(v)) {
-          forest.put(v, e);                      // e is the tree edge that discovered v
-          return DFS(g, v, known, forest);              // recursively explore from v
-        } 
-      }
-      return false;
-  }
-    
-    
+       */
     /**
      * Returns a Graph from a map
      * @param map - LinkedList<LinkedList<Character>> with the data
