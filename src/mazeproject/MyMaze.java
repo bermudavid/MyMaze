@@ -6,9 +6,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.logging.Level;
@@ -98,206 +97,8 @@ public class MyMaze {
         }
       return false;
     }
-    interface Position<E> {
-    /**
-     * returns the stament in position
-     * @throws IllegalStateException 
-     */
-      E getElement() throws IllegalStateException;
-    }
-    
-    class Graph<V,E> {
-      //Nested classes
-      private class Edge<E>{
-        private E element;
-        private Position<Edge<E>> pos;
-        private Vertex<V>[ ] endpoints;
-        /** 
-         * Constructs Edge instance from u to v, storing the given element.
-         */
-        public Edge(Vertex<V> u, Vertex<V> v, E elem) {
-          element = elem;
-          endpoints = (Vertex<V>[ ]) new Vertex[ ]{u,v}; // array of length 2
-        }
-        /** Returns the element associated with the edge. */
-        public E getElement() { return element; }
-        /** Returns reference to the endpoint array. */
-        public Vertex<V>[ ] getEndpoints() { return endpoints; }
-        /** Stores the position of this edge within the graph's vertex list. */
-        public void setPosition(Position<Edge<E>> p) { pos = p; }
-        /** Returns the position of this edge within the graph's vertex list. */
-        public Position<Edge<E>> getPosition() { return pos; }
-      }
-      private class Vertex<V>{
-        private V element;
-        private Position<Vertex<V>> pos;
-        private Map<Vertex<V>, Edge<E>> outgoing, incoming;
 
-        public Vertex(V elem, boolean graphIsDirected) {
-          element = elem;
-          outgoing = new HashMap<>();
-          if (graphIsDirected)
-            incoming = new HashMap<>();
-          else
-            incoming = outgoing; // if undirected, alias outgoing map
-          }
-          /** Returns the element associated with the vertex. */
-          public V getElement() { return element; }
-          /** Stores the position of this vertex within the graph's vertex list. */
-          public void setPosition(Position<Vertex<V>> p) { pos = p; }
-          /** Returns the position of this vertex within the graph's vertex list. */
-          public Position<Vertex<V>> getPosition() { return pos; }
-          /** Returns reference to the underlying map of outgoing edges. */
-          public Map<Vertex<V>, Edge<E>> getOutgoing() { return outgoing; }
-          /** Returns reference to the underlying map of incoming edges. */
-          public Map<Vertex<V>, Edge<E>> getIncoming() { return incoming; }
-      }
-      
-      
-      //instance variables
-      private boolean isDirected;
-      private LinkedList<Vertex<V>> vertices = new LinkedList<>();
-      private LinkedList<Edge<E>> edges = new LinkedList<>();
-      //methods
-      
-      
-      public Graph(boolean directed) { isDirected = directed; }
-      /** Returns the number of vertices of the graph */
-      public int numVertices() { return vertices.size(); }
-      /**Returns the vertices of the graph as an iterable collection */
-      public Iterable<Vertex<V>> vertices() { return vertices; }
-      /**Returns the number of edges of the graph */
-      public int numEdges() { return edges.size(); }
-      /**Returns the edges of the graph as an iterable collection */
-      public Iterable<Edge<E>> edges() { return edges; }
-      /**Returns the number of edges for which vertex v is the origin. */
-      public int outDegree(Vertex<V> v) {
-        Vertex<V> vert = validate(v);
-        return vert.getOutgoing().size();
-      }
-      /**Returns an iterable collection of edges for which vertex v is the origin. */
-      public Iterable<Edge<E>> outgoingEdges(Vertex<V> v) {
-        Vertex<V> vert = validate(v);
-        return vert.getOutgoing().values(); // edges are the values in the adjacency map
-      }
-      /**Returns the number of edges for which vertex v is the destination. */
-      public int inDegree(Vertex<V> v) {
-        Vertex<V> vert = validate(v);
-        return vert.getIncoming().size();
-      }
-      /** Returns an iterable collection of edges for which vertex v is the destination. */
-      public Iterable<Edge<E>> incomingEdges(Vertex<V> v) {
-        Vertex<V> vert = validate(v);
-        return vert.getIncoming().values(); // edges are the values in the adjacency map
-      }
-      public Edge<E> getEdge(Vertex<V> u, Vertex<V> v) {
-      /** Returns the edge from u to v, or null if they are not adjacent. */
-        Vertex<V> origin = validate(u);
-        return origin.getOutgoing().get(v); // will be null if no edge from u to v
-      }
-      /** Returns the vertices of edge e as an array of length two. */
-      public Vertex<V>[ ] endVertices(Edge<E> e) {
-        Edge<E> edge = validate(e);
-        return edge.getEndpoints();
-      }
-      /* Returns the vertex that is opposite vertex v on edge e. */
-      public Vertex<V> opposite(Vertex<V> v, Edge<E> e) throws IllegalArgumentException {
-        Edge<E> edge = validate(e);
-        Vertex<V>[ ] endpoints = edge.getEndpoints();
-        
-		if (endpoints[0] == v)
-          return endpoints[1];
-        else if (endpoints[1] == v)
-          return endpoints[0];
-        else
-          throw new IllegalArgumentException("v is not incident to this edge");
-      }
-      /** Inserts and returns a new vertex with the given element. */
-      public Vertex<V> insertVertex(V element) {
-        Vertex<V> v = new Vertex<>(element, isDirected);
-        vertices.addLast(v);
-        v.setPosition(vertices.getLast().pos);
-        return v;
-      }
-      /** Inserts and returns a new edge between u and v, storing given element. */
-      public Edge<E> insertEdge(Vertex<V> u, Vertex<V> v, E element) throws IllegalArgumentException {
-        if (getEdge(u,v) == null) {
-          Edge<E> e = new Edge<>(u, v, element);
-          edges.addLast(e);
-          e.setPosition(edges.getLast().pos);
-          Vertex<V> origin = validate(u);
-          Vertex<V> dest = validate(v);
-          origin.getOutgoing().put(v, e);
-          dest.getIncoming().put(u, e);
-          return e;
-        } else {
-		    throw new IllegalArgumentException("Edge from u to v exists");
-		}
-      }
-      /**Removes a vertex and all its incident edges from the graph. */
-      public void removeVertex(Vertex<V> v) {
-        Vertex<V> vert = validate(v);
-        // remove all incident edges from the graph
-        for (Edge<E> e : vert.getOutgoing().values())
-          removeEdge(e);
-        for (Edge<E> e : vert.getIncoming().values())
-          removeEdge(e);
-          // remove this vertex from the list of vertices
-        vertices.remove(vert.getPosition());
-        
-      }
-      /** Not implemented yet */
-      public Vertex<V> validate(Vertex<V> v){
-        if(v != null)
-          return v;
-        else
-          throw new IllegalArgumentException("Is invalid");
-      }
-      /** Not implemented yet */
-      public Edge<E> validate(Edge<E> e){
-        
-        return e;
-      }
-      public void removeEdge(Edge<E> e){
-        edges.remove(e);
-      }
-      
-    }
 
-    
-    boolean graphSolveDFS(){
-      Graph<Node,Integer> G = new Graph<>(false);
-      G.insertVertex(ini);
-      Node n = ini,s = ini ,e = ini ,w = ini;
-
-      for(int i = 0; i < map.size();i++){
-		for(int j = 0; j < map.get(0).size();j++){
-          n = n.north();
-          if(n != null && n.square != 'X'){
-            G.insertVertex(n);
-          }
-          s = s.south();
-          if(s != null && s.square != 'X'){
-            G.insertVertex(s);
-          }
-          e = e.east();
-          if(e != null && e.square != 'X'){
-            G.insertVertex(e);
-          }
-          w = w.west();
-          if(w != null && w.square != 'X'){
-            G.insertVertex(w);
-          }
-        }
-      }
-      
-      
-      System.out.println("Vertex: "+G.numVertices() + " Edges: "+ G.numEdges());
-      
-      
-      
-      return true;
-    }
     
     /**
      * this represent a square
@@ -365,6 +166,37 @@ public class MyMaze {
       public Node getElement() throws IllegalStateException {
         return this; 
       }
+
+      @Override
+      public int hashCode() {
+        int hash = 7;
+        hash = 41 * hash + this.x;
+        hash = 41 * hash + this.y;
+        return hash;
+      }
+
+      @Override
+      public boolean equals(Object obj) {
+        if (this == obj) {
+          return true;
+        }
+        if (obj == null) {
+          return false;
+        }
+        if (getClass() != obj.getClass()) {
+          return false;
+        }
+        final Node other = (Node) obj;
+        if (this.x != other.x) {
+          return false;
+        }
+        if (this.y != other.y) {
+          return false;
+        }
+        return true;
+      }
+
+      
     }
     /**
      * return the distance to the end node
@@ -374,6 +206,15 @@ public class MyMaze {
     int distanceToEnd(Node n){
       return Math.abs(n.getX() -end.getX()) + Math.abs(n.getY()-end.getY());
     }
+    /**
+     * return the distance to the end node
+     * @param n node to compare
+     * @return distance to end
+     */
+    int manhattanDistance(Node a,Node b){
+      return Math.abs(a.getX() -b.getX()) + Math.abs(a.getY()-b.getY());
+    }
+    
     /**
      * check if the square is reachable
      * @param squ char to probe
@@ -613,7 +454,17 @@ public class MyMaze {
       //solveStack(x,y);
       //solveQueue(x,y);
       //solveHeap(x,y);
-      graphSolveDFS();
+      Vertex<Node> u = null;
+	  Graph<Node,String> G = graphFromMap(map,false);
+      for(Vertex<Node> v : G.vertices()){
+        if(v.getElement().equals(ini)){
+          u = v;
+          break;
+        }
+        else
+          u = v;
+      }
+      graphSolveDFS(G,u);
     }
     public int[] findInit(){
       int[] res = {0,0};
@@ -786,5 +637,139 @@ public class MyMaze {
       solveMaze(x,y);
       //printPreMaze();
     }
+    String tagger(String res,int c){
+      switch(c%11){
+        case 0:
+          return res +"A";
+        case 1:
+          return res + "B";
+        case 2:
+          return res + "C";
+        case 3:
+          return res + "D";
+        case 5:
+          return res + "E";
+        case 6:
+          return res + "F";
+        case 7:
+          return res + "G";
+        case 8:
+          return res + "H";
+        case 9:
+          return res + "I";
+        case 10:
+          return res + "J";
+      }
+      return res;
+    }
+    /**
+     * solve the maze by DFS
+     * @return 
+     */
+    boolean graphSolveDFS(Graph<Node,String> G, Vertex<Node> v){
+      LinkedList<Vertex<Node>> S = new LinkedList<>();
+      
+      S.add(v);
+         
+      Vertex<Node> next;
+      
+      while(!S.isEmpty()){
+        v = S.pop();
+        if(v.getElement().getSq() == 'F'){          
+          return true;
+        }
+        if(v.getElement().getSq() != 'V'){
+          mark(v.getElement().getX(),v.getElement().getY(),'V');
+          v.getElement().setSquare('V');
+          for(Edge<String> w : G.outgoingEdges(v)){
+            S.push(G.opposite(v,w));
+            System.out.println(v.getElement()+ "->"+w.getElement() + "->" + G.opposite(v,w).getElement());
+          }
+        }
+      }
+      
+      return true;
+    }
+    
+    public boolean DFS(Graph<Node,Integer> g, Vertex<Node> u, List<Vertex<Node>> known, Map<Vertex<Node>, Edge<Integer>> forest) {
+      if(u.getElement().getSq() == 'F'){
+        mark(u.getElement().getX(), u.getElement().getY(),'V');
+        known.add(u); 
+        return true;
+      } 
+      mark(u.getElement().getX(), u.getElement().getY(),'V');
+      known.add(u);
+      for (Edge<Integer> e : g.outgoingEdges(u)) {     // for every outgoing edge from u
+        Vertex<Node> v = g.opposite(u, e);
+        if (!known.contains(v)) {
+          forest.put(v, e);                      // e is the tree edge that discovered v
+          return DFS(g, v, known, forest);              // recursively explore from v
+        } 
+      }
+      return false;
+  }
+    
+    
+    /**
+     * Returns a Graph from a map
+     * @param map - LinkedList<LinkedList<Character>> with the data
+     * @param directed if is true returns a directed graph
+     * @return Graph
+     */
+    public Graph<Node,String> graphFromMap(
+            LinkedList<LinkedList<Character>> map,
+            boolean directed
+    ) {
+     
+      Graph<Node, String> G = new AdjacencyMapGraph<>(directed);
+      Map<Node, Vertex<Node> > verts = new ProbeHashMap<>();
+      LinkedList<Node> list = new LinkedList<>();
 
+      for (int i = 0; i < map.size(); i++) {
+        for (int j = 0; j < map.get(0).size(); j++) {
+          Node tmp = new Node(i,j,map.get(i).get(j));
+          if(tmp.getSq() != 'X'){
+            
+            verts.put(tmp, G.insertVertex(tmp));
+            list.add(tmp);
+          }
+        }
+      }
+      
+      Node b;
+      Integer cost;
+      //int cont = 0;
+      for(Node a: list){
+        b = a.west();
+        if(verts.get(b) != null && G.getEdge(verts.get(a),verts.get(b)) == null && b!= a ){
+          cost = manhattanDistance(a,b);
+          G.insertEdge(verts.get(a), verts.get(b), ""+cost);
+          //cont++;
+        }
+        b = a.east();
+        if(verts.get(b) != null && G.getEdge(verts.get(a),verts.get(b)) == null && b!= a ){
+          cost = manhattanDistance(a,b);
+          G.insertEdge(verts.get(a), verts.get(b), ""+cost);
+          //cont++;
+        }
+        
+        b = a.south();
+        if(verts.get(b) != null && G.getEdge(verts.get(a),verts.get(b)) == null && b!= a ){
+          cost = manhattanDistance(a,b);
+          G.insertEdge(verts.get(a), verts.get(b), ""+cost);
+          //cont++;
+        }
+        
+        b = a.north();
+        if(verts.get(b) != null && G.getEdge(verts.get(a),verts.get(b)) == null && b!= a ){
+          cost = manhattanDistance(a,b);
+          G.insertEdge(verts.get(a), verts.get(b),""+cost);
+          //cont++;
+        }
+        
+        
+        
+      }
+       return G;
+     }
 }
