@@ -678,10 +678,12 @@ public class MyMaze {
           mark(v.getElement().getX(),v.getElement().getY(),'V');
           v.getElement().setSquare('V');
           for(Edge<String> w : G.outgoingEdges(v)){
-            S.push(G.opposite(v,w));
-            System.out.println(v.getElement()+ "->"+w.getElement() + "->" + G.opposite(v,w).getElement());
+            if(G.opposite(v, w).getElement().getSq() != 'V'){
+              S.push(G.opposite(v,w));
+              System.out.println(v.getElement()+ "->"+w.getElement() + "->" + G.opposite(v,w).getElement());
+            }
           }
-        }
+        } 
       }
       return true;
     }
