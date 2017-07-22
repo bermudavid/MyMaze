@@ -464,7 +464,8 @@ public class MyMaze {
         else
           u = v;
       }
-      graphSolveDFS(G,u);
+      //graphSolveDFS(G,u);
+      graphSolveBFS(G,u);
     }
     public int[] findInit(){
       int[] res = {0,0};
@@ -685,29 +686,26 @@ public class MyMaze {
       }
       return true;
     }
-    /*
+    
     boolean graphSolveBFS(Graph<Node,String> G, Vertex<Node> v){
-      //LinkedList<Vertex<Node>> S = new LinkedList<>();
       Queue<Vertex<Node>> S = new LinkedList<>();
       S.add(v);   
       while(!S.isEmpty()){
-        v = S.pop();
+        v = S.poll();
         if(v.getElement().getSq() == 'F'){          
           return true;
         }
-        if(v.getElement().getSq() != 'V'){
-          mark(v.getElement().getX(),v.getElement().getY(),'V');
-          v.getElement().setSquare('V');
-          for(Edge<String> w : G.outgoingEdges(v)){
-            S.push(G.opposite(v,w));
+        for(Edge<String> w : G.outgoingEdges(v)){
+          if(G.opposite(v,w).getElement().getSq() != 'V'){
+            mark(v.getElement().getX(),v.getElement().getY(),'V');
+            v.getElement().setSquare('V');
+            S.add(G.opposite(v,w));
             System.out.println(v.getElement()+ "->"+w.getElement() + "->" + G.opposite(v,w).getElement());
           }
         }
       }
-      
       return true;
     }
-       */
     /**
      * Returns a Graph from a map
      * @param map - LinkedList<LinkedList<Character>> with the data
